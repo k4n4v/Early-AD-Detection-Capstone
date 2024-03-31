@@ -1,48 +1,43 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
-import math
 
-cap = cv.VideoCapture("samples/test5.mov")
 
-initial_x = None
-initial_y = None
-movement_x = []
-movement_y = []
-coord_count = 0  # Initialize the counter for coordinates
+def initialize_video_capture(video_path):
+    """Initializes and returns a video capture object for the given video file."""
+    return cv.VideoCapture(video_path)
 
-coordinates = []
-distances = []
-speeds_pixels_per_second = []  # List to store the speeds in pixels/second
-speeds_degrees_per_second = []  # List to store the speeds in degrees/second
 
-# Setup specific variables
-frame_time = 1/60  # Time between frames in seconds for a 60 FPS video
-fov_degrees = 65.0  # Horizontal Field of View of the camera in degrees
-resolution_pixels = 1920  # Width of the ROI in pixels (2000 - 900)
-
-while True:
-    ret, frame = cap.read()
-    
-    if not ret:
-        break
-
-    roi = frame[300:800, 900:2000]  # Crop frame to right eye only
+def process_frame(frame, eye_roi, initial_x, initial_y, save_threshold_image=False, save_tracking_image=False):
+    """Processes a single frame to find and mark the center of the largest contour, typically the pupil, within a specified region of interest (ROI)."""
+    roi = frame[eye_roi]
     rows, cols, _ = roi.shape
     gray_roi = cv.cvtColor(roi, cv.COLOR_BGR2GRAY)
     gray_roi = cv.GaussianBlur(gray_roi, (15, 15), 0)
-    
     _, threshold = cv.threshold(gray_roi, 9, 255, cv.THRESH_BINARY_INV)
     contours, _ = cv.findContours(threshold, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=lambda x: cv.contourArea(x), reverse=True)
-    
-    for cnt in contours:
+
+    if contours:
+        cnt = contours[0]  # Process only the largest contour
         (x, y, w, h) = cv.boundingRect(cnt)
-        center_x = x + int(w/2)
-        center_y = y + int(h/2)
+        center_x = x + int(w / 2)
+        center_y = y + int(h / 2)
         
-        # Lines showing the center of the pupil
+        # Save the image with the threshold if not saved already
+        if save_threshold_image:
+            threshold_image_path = "report_template/threshold.png"
+            cv.imwrite(threshold_image_path, threshold)
+            save_threshold_image = False  # Reset flag to prevent further saves
+
+        # Lines to show the center of the pupil
         cv.line(roi, (center_x, 0), (center_x, rows), (0, 255, 0), 2)
         cv.line(roi, (0, center_y), (cols, center_y), (0, 255, 0), 2)
+
+        # Save the image with tracking lines if not saved already
+        if save_tracking_image:
+            tracking_image_path = "report_template/tracking.png"
+            cv.imwrite(tracking_image_path, roi)
+            save_tracking_image = False  # Reset flag to prevent further saves
 
         if initial_x is None and initial_y is None:
             initial_x, initial_y = center_x, center_y
@@ -50,54 +45,64 @@ while True:
         relative_x = center_x - initial_x
         relative_y = center_y - initial_y
 
-        # Record every frame
-        movement_x.append(relative_x)
-        movement_y.append(relative_y)
-        
-        coordinates.append((relative_x,relative_y))
-        
-        # Calculate distances and speeds if there is at least one previous coordinate
-        if len(movement_x) > 1:
-            dx = movement_x[-1] - movement_x[-2]
-            dy = movement_y[-1] - movement_y[-2]
-            
-            distance = math.sqrt(dx**2 + dy**2)
-            distances.append(distance)
-            
-            # Calculate and store speed in pixels/second
-            speed_pixels_per_second = distance / frame_time
-            speeds_pixels_per_second.append(speed_pixels_per_second)
-            
-            # Convert speed from pixels/second to degrees/second
-            speed_degrees_per_second = speed_pixels_per_second * (fov_degrees / resolution_pixels)
-            speeds_degrees_per_second.append(speed_degrees_per_second)
+        return roi, (relative_x, relative_y), initial_x, initial_y, save_threshold_image, save_tracking_image
+    return roi, None, initial_x, initial_y, save_threshold_image, save_tracking_image
 
-        break # Process only the largest contour
 
-    cv.imshow("Frame", roi) # Display eye being tracked
+def clean_up(cap):
+    """Releases video capture and closes all OpenCV windows."""
+    cap.release()
+    cv.destroyAllWindows()
+
+
+def process_video(video_path, eye_roi, show_tracking):
+    """Processes a video to track and calculate the relative movements of the pupil within a specified ROI across frames."""
+    cap = initialize_video_capture(video_path)
+    initial_x, initial_y = None, None
+    coordinates = []
+    save_threshold_image = True  # Initial flag to save contour image once
+    save_tracking_image = True  # Initial flag to save tracking image once
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        roi, relative_position, initial_x, initial_y, save_threshold_image, save_tracking_image = process_frame(frame, eye_roi, initial_x, initial_y, save_threshold_image, save_tracking_image)
+        if relative_position:
+            coordinates.append(relative_position)
+
+        delay = 1
+        if show_tracking:
+            cv.imshow("Frame", roi)  # Display eye being tracked
+            delay = 16
+            
+        key = cv.waitKey(delay)
+        if key == 27:  # ESC to quit
+            break
+
+    clean_up(cap)
+    return coordinates
+
+
+def plot_coordinates(coordinates, show_plot):
+    """Plots and saves the relative movements of the pupil on an XY graph."""
+    if not coordinates:
+        print("No coordinates to plot.")
+        return
     
-    frame_delay = int(1000 / 60)  # For 60 FPS delay is around 16.67 ms
-    key = cv.waitKey(frame_delay)  # Frame delay so it is easier to watch video preview
-    if key == 27:  # ESC to quit
-        break
+    x_values, y_values = zip(*coordinates)  # Unpack the list of coordinates into separate lists for X and Y
 
-cap.release()
-cv.destroyAllWindows()
-
-
-# Print the speeds list
-print("Coordinates (x,y):", coordinates[:5])
-print("Speeds between coordinates (pixels/second):", speeds_pixels_per_second[:5])
-print("Speeds between coordinates (degrees/second):", speeds_degrees_per_second[:5])
-
-
-
-# Plotting after the loop is finished
-plt.figure()
-for i, (x, y) in enumerate(zip(movement_x, movement_y)):
-    plt.scatter(x, y, c='r')
-    plt.annotate(f'({x}, {relative_y})', (x, y), textcoords="offset points", xytext=(0,10), ha='center')
-plt.xlabel("X Movement from Initial")
-plt.ylabel("Y Movement from Initial")
-plt.title("Pupil Movement from Initial Position")
-plt.show()
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_values, y_values, marker='o', linestyle='-', color='red')
+    plt.title("Pupil Movement Relative to Initial Position")
+    plt.xlabel("Relative X Position")
+    plt.ylabel("Relative Y Position")
+    plt.grid(True)
+    
+    # Save the figure to a file
+    plt.savefig("report_template/pupil_movement_plot.png", format='png', dpi=300)
+    # Show the plot
+    
+    if show_plot:
+        plt.show()
