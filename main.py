@@ -5,7 +5,7 @@ from report_generator import create_output_report
 
 SHOW_TRACKING = False
 SHOW_PLOT = False
-VIDEO_PATH = "samples/sample1.mp4"
+VIDEO_PATH = "samples/sample1.mov"
 
 def main():
     
@@ -14,7 +14,7 @@ def main():
         '{{date}}': str(date.today()),
         '{{name}}': 'John Doe',
         '{{address}}': '123 Maple Street, Suite 101, Ottawa, ON K1A 0B1',
-        '{{number}}': '123-456-7890',
+        '{{phone}}': '123-456-7890',
         '{{age}}': '30',
         '{{sex}}': 'Male',
         '{{eye}}': 'Right',

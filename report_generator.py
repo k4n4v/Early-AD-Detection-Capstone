@@ -1,6 +1,7 @@
 import os
 from docx import Document
 from docx.shared import Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 
 def replace_text_variables(participant_date):
@@ -24,8 +25,12 @@ def add_images_to_end_of_document(doc):
     ]
 
     for image_path in images: # Add an images to the end of the document
-        doc.add_picture(image_path, width=Inches(5))
-    
+        # Add an image to the end of the document
+        p = doc.add_paragraph()
+        r = p.add_run()
+        r.add_picture(image_path, width=Inches(6))
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
     remove_images(images)
 
 
