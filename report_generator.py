@@ -2,6 +2,7 @@ import os
 from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx2pdf import convert
 
 
 def replace_text_variables(participant_date):
@@ -48,4 +49,6 @@ def create_output_report(participant_data):
         os.makedirs(directory)
     
     doc.save(f"reports/{participant_data['{{name}}']}.docx")
+    convert(f"reports/{participant_data['{{name}}']}.docx")
+
     
