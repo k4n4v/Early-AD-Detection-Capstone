@@ -1,7 +1,19 @@
+def select_eye():
+    # Ask the user to select an eye, with "right" as the default
+    choice = input("Please select an eye to process (left/right). Default is right: ").lower().strip()
+    
+    # Return the corresponding slice based on the user's input
+    # Default to the right eye if the input is unrecognized
+    if choice == "left":
+        return (slice(300, 800), slice(300, 1100)), "Left"
+    else:
+        # Default to right eye
+        return (slice(300, 800), slice(700, 1500)), "Right"
+
 def saccade_detection(coordinates):
     
-    good = 0
-    bad = 0
+    regular = 0
+    irregular = 0
 
     # Loop through the coordinates starting at 132 and checking every 282 points
     for i in range(131, len(coordinates), 282):
@@ -18,10 +30,10 @@ def saccade_detection(coordinates):
 
             # Update counters based on whether a change was found within 9 points
             if change_within_9:
-                good += 1
+                regular += 1
             else:
-                bad += 1
+                irregular += 1
 
-    return good, bad
+    return regular, irregular
 
 

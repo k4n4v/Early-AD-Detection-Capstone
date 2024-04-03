@@ -21,7 +21,7 @@ def replace_text_variables(participant_date):
 def add_images_to_end_of_document(doc):
     images = [
     'report_template/pupil_movement_plot.png',
-    'report_template/threshold.png',
+    #'report_template/threshold.png',
     'report_template/tracking.png'
     ]
 
@@ -52,7 +52,6 @@ def create_output_report(participant_data):
     
     # Un-comment next line to automatically convert doxc to pdf.
     # Note: Only works on MacOS and Windows with Office Tools installed.
-    
     #convert(f"reports/{participant_data['{{name}}']}.docx")
 
     

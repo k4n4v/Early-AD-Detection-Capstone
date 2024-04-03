@@ -102,7 +102,6 @@ def plot_coordinates(coordinates, show_plot):
     
     # Save the figure to a file
     plt.savefig("report_template/pupil_movement_plot.png", format='png', dpi=300)
-    # Show the plot
-    
+
     if show_plot:
         plt.show()
