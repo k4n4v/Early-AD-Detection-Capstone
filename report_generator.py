@@ -49,6 +49,10 @@ def create_output_report(participant_data):
         os.makedirs(directory)
     
     doc.save(f"reports/{participant_data['{{name}}']}.docx")
-    convert(f"reports/{participant_data['{{name}}']}.docx")
+    
+    # Un-comment next line to automatically convert doxc to pdf.
+    # Note: Only works on MacOS and Windows with Office Tools installed.
+    
+    #convert(f"reports/{participant_data['{{name}}']}.docx")
 
     

@@ -3,8 +3,8 @@ def saccade_detection(coordinates):
     good = 0
     bad = 0
 
-    # Loop through the coordinates starting at 132 and checking every 162 points
-    for i in range(131, len(coordinates), 162):
+    # Loop through the coordinates starting at 132 and checking every 282 points
+    for i in range(131, len(coordinates), 282):
 
         change_within_9 = False
         
