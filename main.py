@@ -3,8 +3,8 @@ from eye_tracker import plot_coordinates, process_video
 from saccade_detection import saccade_detection, select_eye
 from report_generator import create_output_report
 
-SHOW_TRACKING = True 
-SHOW_PLOT = True
+SHOW_TRACKING = False 
+SHOW_PLOT = False
 VIDEO_PATH = "samples/sample2.mp4"
 
 def main():
@@ -25,15 +25,15 @@ def main():
         '{{age}}': '38',
         '{{sex}}': 'Male',
         '{{eye}}': eye_choice,
-        '{{irregular}}': f'{str(irregular_percentage)}%',
+        '{{irregular}}': f'{str(round(irregular_percentage, 2))}%',
         '{{notes}}': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vestibulum morbi blandit cursus risus at ultrices mi. Congue nisi vitae suscipit tellus mauris a. Sit amet consectetur adipiscing elit duis tristique. Ultrices vitae auctor eu augue ut lectus arcu. Euismod quis viverra nibh cras. '
     }
      
     create_output_report(participant_data)
 
     # Print results to terminal
-    #print("Coordinates:", coordinates)
-    #print(f"Saccade Detection:\tRegular: \t{regular}\tIrregular:{irregular}")
+    print("Coordinates:", coordinates)
+    print(f"Saccade Detection:\tRegular: \t{regular}\tIrregular:{irregular}")
 
 if __name__ == "__main__":
     main()
